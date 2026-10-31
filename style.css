@@ -1,0 +1,198 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #1b2a1b;
+  color: #fff;
+  font-family: "Hiragino Maru Gothic ProN", "Rounded Mplus 1c", "Arial Rounded MT Bold", sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 16:9 game area that fits the screen */
+#stage {
+  position: relative;
+  width: min(100vw, calc(100dvh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  container-type: inline-size;
+}
+
+#screen {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: auto;
+}
+
+/* ---------- menus ---------- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.15), rgba(0, 40, 0, 0.55));
+}
+.hidden { display: none !important; }
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2cqw;
+  max-height: 100%;
+  padding: 2cqw;
+  text-align: center;
+}
+
+.hero {
+  height: 26cqw;
+  filter: drop-shadow(0 1cqw 1cqw rgba(0, 0, 0, 0.35));
+  animation: float 2.4s ease-in-out infinite;
+}
+.hero.bounce { animation: hop 0.7s ease-in-out infinite; }
+
+h1 {
+  margin: 0;
+  font-size: 6.5cqw;
+  line-height: 1;
+  color: #fff59d;
+  -webkit-text-stroke: 0.35cqw #33691e;
+  paint-order: stroke fill;
+  text-shadow: 0 0.5cqw 0 #1b5e20;
+}
+h1 span { color: #ff8a80; margin-left: 0.5cqw; }
+
+h2 {
+  margin: 0;
+  font-size: 4cqw;
+  -webkit-text-stroke: 0.25cqw #33691e;
+  paint-order: stroke fill;
+}
+
+.buttons {
+  display: flex;
+  gap: 1.2cqw;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.buttons button {
+  min-width: 18cqw;
+  padding: 1.2cqw 2.4cqw;
+  font-size: 2.4cqw;
+  font-weight: bold;
+  color: #33691e;
+  background: linear-gradient(#fffde7, #fff59d);
+  border: 0.35cqw solid #33691e;
+  border-radius: 99px;
+  box-shadow: 0 0.5cqw 0 #33691e;
+}
+.buttons button:active { transform: translateY(0.4cqw); box-shadow: 0 0.1cqw 0 #33691e; }
+.buttons button.sub { background: #e8f5e9; min-width: 12cqw; }
+
+.help {
+  background: rgba(0, 40, 0, 0.75);
+  border-radius: 2cqw;
+  font-size: 1.8cqw;
+  max-width: 80cqw;
+}
+.help p { margin: 0; }
+.help .small { font-size: 1.5cqw; opacity: 0.8; }
+.help table { border-collapse: collapse; }
+.help th, .help td { padding: 0.3cqw 1.4cqw; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+
+@keyframes float {
+  50% { transform: translateY(-1cqw) rotate(2deg); }
+}
+@keyframes hop {
+  50% { transform: translateY(-2cqw); }
+}
+
+/* ---------- touch controls ---------- */
+#controls { display: none; }
+
+body.touch.in-fight #controls,
+body.in-fight #controls.always {
+  display: block;
+}
+
+#controls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  pointer-events: none;
+}
+#controls button {
+  pointer-events: auto;
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.75);
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 24px;
+  font-weight: bold;
+  touch-action: none;
+}
+#controls button.active { background: rgba(255, 255, 255, 0.55); color: #333; }
+
+.dpad { position: absolute; left: calc(18px + env(safe-area-inset-left)); bottom: 18px; width: 192px; height: 192px; }
+.dpad .up { left: 64px; bottom: 128px; }
+.dpad .left { left: 0; bottom: 64px; }
+.dpad .right { left: 128px; bottom: 64px; }
+.dpad .down { left: 64px; bottom: 0; }
+
+.actions { position: absolute; right: calc(18px + env(safe-area-inset-right)); bottom: 18px; width: 200px; height: 170px; }
+.actions .punch { right: 100px; bottom: 0; width: 76px; height: 76px; background: rgba(255, 152, 0, 0.45); }
+.actions .kick { right: 10px; bottom: 30px; width: 76px; height: 76px; background: rgba(33, 150, 243, 0.45); }
+.actions .special { right: 64px; bottom: 100px; background: rgba(229, 57, 53, 0.5); font-size: 28px; }
+
+#pause-btn {
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: 44px !important;
+  height: 44px !important;
+  font-size: 16px !important;
+}
+
+/* Portrait phone: game on top, buttons in the space below. */
+@media (orientation: portrait) {
+  body { justify-content: flex-start; padding-top: env(safe-area-inset-top); }
+  .dpad, .actions { bottom: calc(40px + env(safe-area-inset-bottom)); }
+}
+
+/* Short landscape phone: smaller, more see-through buttons over the game. */
+@media (orientation: landscape) and (max-height: 500px) {
+  #controls button { width: 54px; height: 54px; font-size: 20px; background: rgba(0, 0, 0, 0.18); }
+  .dpad { width: 162px; height: 162px; bottom: 10px; }
+  .dpad .up { left: 54px; bottom: 108px; }
+  .dpad .left { left: 0; bottom: 54px; }
+  .dpad .right { left: 108px; bottom: 54px; }
+  .dpad .down { left: 54px; bottom: 0; }
+  .actions { bottom: 10px; }
+  .actions .punch, .actions .kick { width: 64px; height: 64px; }
+  #pause-btn { bottom: 10px; }
+}
