@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#2e7d32">
+  <title>TOWA様バトル</title>
+  <link rel="icon" href="assets/towa.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stage">
+    <canvas id="screen" width="960" height="540"></canvas>
+
+    <div id="title" class="overlay hidden">
+      <div class="panel">
+        <img src="assets/towa.png" alt="TOWA様" class="hero">
+        <h1>TOWA様<span>バトル</span></h1>
+        <div class="buttons">
+          <button data-action="cpu">CPUと対戦</button>
+          <button data-action="versus">2人で対戦</button>
+          <button data-action="help" class="sub">あそびかた</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="difficulty" class="overlay hidden">
+      <div class="panel">
+        <h2>つよさをえらぶ</h2>
+        <div class="buttons">
+          <button data-action="level" data-level="easy">よわい</button>
+          <button data-action="level" data-level="normal">ふつう</button>
+          <button data-action="level" data-level="hard">つよい</button>
+          <button data-action="title" class="sub">もどる</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="help" class="overlay hidden">
+      <div class="panel help">
+        <h2>あそびかた</h2>
+        <p>相手の体力を0にするか、時間切れで多く残っていれば勝ち。<b>2本先取</b>！</p>
+        <p>攻撃を当てたり受けたりすると<b>りんごゲージ</b>がたまり、半分使って必殺技<b>「リンゴ投げ」</b>が出せます。</p>
+        <table>
+          <tr><th></th><th>1P</th><th>2P</th><th>スマホ</th></tr>
+          <tr><td>移動</td><td>← →</td><td>A D</td><td>◀ ▶</td></tr>
+          <tr><td>ジャンプ</td><td>↑</td><td>W</td><td>▲</td></tr>
+          <tr><td>ガード</td><td>↓</td><td>S</td><td>▼</td></tr>
+          <tr><td>パンチ</td><td>J</td><td>F</td><td>P</td></tr>
+          <tr><td>キック</td><td>K</td><td>G</td><td>K</td></tr>
+          <tr><td>リンゴ投げ</td><td>L</td><td>H</td><td>🍎</td></tr>
+        </table>
+        <p class="small">P / Esc で一時停止</p>
+        <div class="buttons"><button data-action="title">もどる</button></div>
+      </div>
+    </div>
+
+    <div id="result" class="overlay hidden">
+      <div class="panel">
+        <img id="result-img" src="assets/towa.png" alt="" class="hero bounce">
+        <h2 id="result-text"></h2>
+        <div class="buttons">
+          <button data-action="again">もう一回</button>
+          <button data-action="title" class="sub">タイトルへ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button id="pause-btn" data-action="pause" aria-label="一時停止">II</button>
+    <div class="dpad">
+      <button data-btn="up" class="up">▲</button>
+      <button data-btn="left" class="left">◀</button>
+      <button data-btn="right" class="right">▶</button>
+      <button data-btn="down" class="down">▼</button>
+    </div>
+    <div class="actions">
+      <button data-btn="special" class="special">🍎</button>
+      <button data-btn="punch" class="punch">P</button>
+      <button data-btn="kick" class="kick">K</button>
+    </div>
+  </div>
+
+  <script src="src/input.js"></script>
+  <script src="src/fighter.js"></script>
+  <script src="src/effects.js"></script>
+  <script src="src/ai.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
