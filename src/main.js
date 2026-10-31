@@ -20,7 +20,6 @@ const Game = {
   paused: false,
   fighters: [],
   brain: null,
-  images: {},
   bg: null,
   clouds: [],
   banner: null,
@@ -31,10 +30,9 @@ const Game = {
     Input.twoPlayer = mode === 'versus';
     Input.p1.clearSource('ai');
     Input.p2.clearSource('ai');
-    const p2name = 'ダークTOWA様';
     this.fighters = [
-      new Fighter({ name: 'TOWA様', image: this.images.towa, x: 280, facing: 1, color: '#7cc576' }),
-      new Fighter({ name: p2name, image: this.images.dark, x: 680, facing: -1, color: '#9575cd' }),
+      new Fighter({ char: CHARACTERS.towa, x: 280, facing: 1 }),
+      new Fighter({ char: CHARACTERS.donguri, x: 680, facing: -1 }),
     ];
     this.brain = mode === 'cpu' ? new CpuBrain(Input.p2, this.level) : null;
     this.wins = [0, 0];
@@ -147,7 +145,7 @@ const Game = {
       const box = { x1: p.x - p.r, x2: p.x + p.r, y1: p.y - p.r, y2: p.y + p.r };
       if (target.state !== 'ko' && rectsOverlap(box, target.hurtbox())) {
         p.alive = false;
-        Effects.appleSplash(p.x, p.y);
+        Effects.appleSplash(p.x, p.y, p.kind);
         this.sound('splat');
         this.applyHit(p.owner, target, MOVES.special, p.x, p.y, true, Math.sign(p.vx));
       }
@@ -158,7 +156,7 @@ const Game = {
       for (let j = i + 1; j < ps.length; j++) {
         if (ps[i].owner !== ps[j].owner && Math.hypot(ps[i].x - ps[j].x, ps[i].y - ps[j].y) < 30) {
           ps[i].alive = ps[j].alive = false;
-          Effects.appleSplash((ps[i].x + ps[j].x) / 2, (ps[i].y + ps[j].y) / 2);
+          Effects.appleSplash((ps[i].x + ps[j].x) / 2, (ps[i].y + ps[j].y) / 2, ps[i].kind);
           this.sound('splat');
         }
       }
@@ -306,7 +304,7 @@ const Game = {
       // round wins as apples
       for (let k = 0; k < WINS_NEEDED; k++) {
         const ax = left ? x + barW - 14 - k * 30 : x + 14 + k * 30;
-        if (k < this.wins[i]) drawApple(ctx, ax, top + barH + 20, 10, 0);
+        if (k < this.wins[i]) drawProjectile(ctx, f.char.projectile, ax, top + barH + 20, 10, 0);
         else {
           ctx.strokeStyle = 'rgba(255,255,255,0.7)';
           ctx.lineWidth = 2;
@@ -326,7 +324,7 @@ const Game = {
       ctx.fillRect(mx + mw / 2 - 1, my, 2, mh);
       ctx.font = 'bold 14px ' + FONT;
       ctx.textAlign = left ? 'left' : 'right';
-      outlinedText(full ? 'りんごOK!' : 'りんごゲージ', left ? mx + mw + 8 : mx - 8, my + mh, full ? '#ffcdd2' : '#fff');
+      outlinedText(full ? f.char.gauge + 'OK!' : f.char.gauge + 'ゲージ', left ? mx + mw + 8 : mx - 8, my + mh, full ? '#ffcdd2' : '#fff');
     });
     // timer
     const secs = Math.ceil(Math.max(0, this.frames) / 60);
@@ -402,8 +400,7 @@ const UI = {
     let msg = f.name + ' の勝ち！';
     if (Game.mode === 'cpu') msg = winner === 0 ? 'TOWA様 の勝利！' : 'まけちゃった…';
     document.getElementById('result-text').textContent = msg;
-    const img = document.getElementById('result-img');
-    img.src = winner === 0 ? 'assets/towa.png' : 'assets/towa-dark.png';
+    drawPortrait(document.getElementById('result-img'), f.char, 'win');
     this.show('result');
   },
 
@@ -433,21 +430,24 @@ function togglePause() {
   Game.paused = !Game.paused;
 }
 
-// ---------- boot ----------
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
+// Draw a character into its own small canvas (result screen).
+function drawPortrait(cv, ch, state) {
+  const g = cv.getContext('2d');
+  g.clearRect(0, 0, cv.width, cv.height);
+  const fake = { state, anim: 10, t: 0, vx: 0, vy: 0, facing: 1, grounded: true };
+  const [pose] = targetPose(fake);
+  g.save();
+  g.translate(cv.width / 2, cv.height - 12);
+  const s = cv.height / 210;
+  g.scale(s, s);
+  drawCharacter(g, ch, pose, false);
+  g.restore();
 }
 
-(async function boot() {
+// ---------- boot ----------
+(function boot() {
   canvas.width = STAGE.width;
   canvas.height = STAGE.height;
-  Game.images.towa = await loadImage('assets/towa.png');
-  Game.images.dark = await loadImage('assets/towa-dark.png');
   Game.makeBackground();
   Input.init();
   UI.init();

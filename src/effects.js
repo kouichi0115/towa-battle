@@ -32,6 +32,39 @@ function drawApple(ctx, x, y, r, spin) {
   ctx.restore();
 }
 
+function drawAcorn(ctx, x, y, r, spin) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(spin || 0);
+  // nut
+  const g = ctx.createRadialGradient(-r * 0.3, 0, r * 0.1, 0, r * 0.2, r);
+  g.addColorStop(0, '#e2a868');
+  g.addColorStop(1, '#8d5a2b');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.75, -r * 0.2);
+  ctx.bezierCurveTo(-r * 0.8, r * 0.7, -r * 0.2, r * 1.05, 0, r * 1.1);
+  ctx.bezierCurveTo(r * 0.2, r * 1.05, r * 0.8, r * 0.7, r * 0.75, -r * 0.2);
+  ctx.closePath();
+  ctx.fill();
+  // cap
+  ctx.fillStyle = '#6b4626';
+  ctx.beginPath();
+  ctx.ellipse(0, -r * 0.25, r * 0.9, r * 0.5, 0, Math.PI, 0);
+  ctx.quadraticCurveTo(0, r * 0.05, -r * 0.9, -r * 0.25);
+  ctx.fill();
+  ctx.strokeStyle = '#4a2f17';
+  ctx.lineWidth = Math.max(2, r * 0.18);
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(0, -r * 0.7); ctx.lineTo(r * 0.15, -r * 1.0); ctx.stroke();
+  ctx.restore();
+}
+
+function drawProjectile(ctx, kind, x, y, r, spin) {
+  if (kind === 'acorn') drawAcorn(ctx, x, y, r, spin);
+  else drawApple(ctx, x, y, r, spin);
+}
+
 const Effects = {
   projectiles: [],
   particles: [],
@@ -48,8 +81,9 @@ const Effects = {
   spawnApple(owner) {
     this.projectiles.push({
       owner,
-      x: owner.x + owner.facing * 50,
-      y: owner.y - 175,
+      kind: owner.char.projectile,
+      x: owner.x + owner.facing * 70,
+      y: owner.y - 120,
       vx: owner.facing * 9.5,
       vy: -6.5,
       r: 17,
@@ -84,8 +118,11 @@ const Effects = {
     this.burst(x, y, ['#b3e5fc', '#ffffff'], 10, 6);
   },
 
-  appleSplash(x, y) {
-    this.burst(x, y, ['#e53935', '#ff8a80', '#fff176', '#ffffff'], 26, 8);
+  appleSplash(x, y, kind) {
+    const colors = kind === 'acorn'
+      ? ['#8d5a2b', '#c8894a', '#6b4626', '#fff3e0']
+      : ['#e53935', '#ff8a80', '#fff176', '#ffffff'];
+    this.burst(x, y, colors, 26, 8);
   },
 
   addText(text, x, y, color) {
@@ -100,7 +137,7 @@ const Effects = {
       p.spin += 0.3 * Math.sign(p.vx);
       if (p.y > STAGE.ground - p.r) {
         // bounce once, then splat
-        if (p.bounced) { p.alive = false; this.appleSplash(p.x, p.y); }
+        if (p.bounced) { p.alive = false; this.appleSplash(p.x, p.y, p.kind); }
         else { p.bounced = true; p.y = STAGE.ground - p.r; p.vy = -5; p.vx *= 0.8; }
       }
       if (p.x < -40 || p.x > STAGE.width + 40) p.alive = false;
@@ -123,7 +160,7 @@ const Effects = {
   },
 
   draw(ctx) {
-    for (const p of this.projectiles) drawApple(ctx, p.x, p.y, p.r, p.spin);
+    for (const p of this.projectiles) drawProjectile(ctx, p.kind, p.x, p.y, p.r, p.spin);
     for (const p of this.particles) {
       const k = p.life / p.max;
       ctx.save();

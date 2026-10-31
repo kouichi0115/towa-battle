@@ -2,8 +2,7 @@
 
 const STAGE = { width: 960, height: 540, ground: 470, left: 50, right: 910 };
 const GRAVITY = 0.8;
-const SPRITE_W = 160;
-const SPRITE_H = 210;
+const DRAW_SCALE = 1.1;
 const SPECIAL_COST = 50;
 
 // Frame data. Hitbox x is measured forward from the fighter's center,
@@ -12,12 +11,12 @@ const MOVES = {
   punch: {
     startup: 5, active: 4, recovery: 10,
     damage: 6, hitstun: 14, blockstun: 8, knockback: 4,
-    box: { x1: 35, x2: 115, y1: -160, y2: -100 },
+    box: { x1: 30, x2: 108, y1: -120, y2: -60 },
   },
   kick: {
     startup: 10, active: 5, recovery: 18,
     damage: 11, hitstun: 20, blockstun: 11, knockback: 8,
-    box: { x1: 30, x2: 135, y1: -95, y2: -25 },
+    box: { x1: 25, x2: 118, y1: -70, y2: -5 },
   },
   special: {
     startup: 14, active: 1, recovery: 20, // the apple comes out on the startup frame
@@ -27,11 +26,9 @@ const MOVES = {
 };
 
 class Fighter {
-  constructor({ name, image, x, facing, color }) {
-    this.name = name;
-    this.image = image;
-    this.flash = makeFlashImage(image);
-    this.color = color;
+  constructor({ char, x, facing }) {
+    this.char = char;
+    this.name = char.name;
     this.startX = x;
     this.startFacing = facing;
     this.reset();
@@ -54,6 +51,7 @@ class Fighter {
     this.buffer = null;
     this.flashFrames = 0;
     this.anim = 0;
+    this.pose = { ...DEFAULT_POSE };
   }
 
   get grounded() { return this.y >= STAGE.ground; }
@@ -118,6 +116,12 @@ class Fighter {
     this.x = Math.max(STAGE.left, Math.min(STAGE.right, this.x));
 
     this.shownHp += (this.hp - this.shownHp) * 0.08;
+    this.updatePose();
+  }
+
+  updatePose() {
+    const [target, k] = targetPose(this);
+    lerpPose(this.pose, target, k);
   }
 
   control(c, opp, game) {
@@ -199,71 +203,21 @@ class Fighter {
 
   // ---------- drawing ----------
   draw(ctx) {
-    const a = this.anim;
-    let rot = 0, sx = 1, sy = 1, ox = 0, oy = 0;
-
-    switch (this.state) {
-      case 'idle':
-        sy = 1 + Math.sin(a * 0.08) * 0.025;
-        sx = 1 - Math.sin(a * 0.08) * 0.015;
-        break;
-      case 'walk':
-        oy = -Math.abs(Math.sin(a * 0.25)) * 8;
-        rot = Math.sin(a * 0.25) * 0.06 + 0.04 * Math.sign(this.vx * this.facing);
-        break;
-      case 'jump':
-        sx = 0.92; sy = 1.08;
-        rot = this.vy < 0 ? -0.08 : 0.08;
-        break;
-      case 'guard':
-        sx = 1.06; sy = 0.86; rot = -0.12;
-        break;
-      case 'attack': {
-        const mv = MOVES[this.move];
-        const p = this.t;
-        if (this.move === 'punch') {
-          if (p < mv.startup) { rot = -0.1; }
-          else if (p < mv.startup + mv.active) { rot = 0.3; ox = 18; }
-          else { rot = 0.3 * (1 - (p - mv.startup - mv.active) / mv.recovery); }
-        } else if (this.move === 'kick') {
-          if (p < mv.startup) { rot = -0.2; sy = 0.92; }
-          else if (p < mv.startup + mv.active) { rot = 0.5; ox = 24; sy = 0.95; }
-          else { rot = 0.5 * (1 - (p - mv.startup - mv.active) / mv.recovery); }
-        } else {
-          if (p < mv.startup) { rot = -0.25 * (p / mv.startup); sy = 1.05; }
-          else { rot = 0.35 * Math.max(0, 1 - (p - mv.startup) / 12); ox = 10; }
-        }
-        break;
-      }
-      case 'hitstun':
-      case 'blockstun':
-        rot = this.state === 'hitstun' ? -0.25 : -0.12;
-        ox = (Math.random() - 0.5) * (this.timer > 6 ? 6 : 0);
-        break;
-      case 'ko':
-        rot = -Math.min(1.45, this.t * 0.06);
-        break;
-      case 'win':
-        rot = Math.sin(a * 0.15) * 0.12;
-        break;
-    }
-
     // shadow
     const air = STAGE.ground - this.y;
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.22)';
     ctx.beginPath();
-    ctx.ellipse(this.x, STAGE.ground + 4, Math.max(20, 60 - air * 0.15), 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(this.x, STAGE.ground + 4, Math.max(20, 58 - air * 0.15), 10, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
+    const shake = this.state === 'hitstun' && this.timer > 6 ? (Math.random() - 0.5) * 6 : 0;
     ctx.save();
-    ctx.translate(this.x + ox * this.facing, this.y + oy);
-    ctx.scale(this.facing, 1);
-    ctx.rotate(rot);
-    ctx.scale(sx, sy);
-    const img = this.flashFrames > 0 && this.flashFrames % 2 === 0 ? this.flash : this.image;
-    ctx.drawImage(img, -SPRITE_W / 2, -SPRITE_H, SPRITE_W, SPRITE_H);
+    ctx.translate(this.x + shake, this.y);
+    ctx.scale(this.facing * DRAW_SCALE, DRAW_SCALE);
+    const flash = this.flashFrames > 0 && this.flashFrames % 2 === 0;
+    drawCharacter(ctx, this.char, this.pose, flash);
     ctx.restore();
 
     this.drawMoveEffects(ctx);
@@ -284,12 +238,6 @@ class Fighter {
     }
     if (this.state !== 'attack') return;
     const mv = MOVES[this.move];
-    if (this.move === 'special' && this.t < mv.startup) {
-      // apple raised above head while winding up
-      const k = this.t / mv.startup;
-      drawApple(ctx, this.x - this.facing * 30, this.y - 215 - k * 10, 10 + k * 6, this.t * 0.2);
-      return;
-    }
     if (!mv.box) return;
     const end = mv.startup + mv.active + 3;
     if (this.t < mv.startup || this.t > end) return;
@@ -310,19 +258,6 @@ class Fighter {
     ctx.stroke();
     ctx.restore();
   }
-}
-
-// A white silhouette of an image, for the hit flash.
-function makeFlashImage(img) {
-  const c = document.createElement('canvas');
-  c.width = img.width;
-  c.height = img.height;
-  const g = c.getContext('2d');
-  g.drawImage(img, 0, 0);
-  g.globalCompositeOperation = 'source-atop';
-  g.fillStyle = '#ffffff';
-  g.fillRect(0, 0, c.width, c.height);
-  return c;
 }
 
 function rectsOverlap(a, b) {

@@ -41,7 +41,7 @@
       <div class="panel help">
         <h2>あそびかた</h2>
         <p>相手の体力を0にするか、時間切れで多く残っていれば勝ち。<b>2本先取</b>！</p>
-        <p>攻撃を当てたり受けたりすると<b>りんごゲージ</b>がたまり、半分使って必殺技<b>「リンゴ投げ」</b>が出せます。</p>
+        <p>攻撃を当てたり受けたりすると<b>ゲージ</b>がたまり、半分使って必殺技が出せます。TOWA様は<b>「リンゴ投げ」</b>、ドングリ番長は<b>「ドングリ投げ」</b>！</p>
         <table>
           <tr><th></th><th>1P</th><th>2P</th><th>スマホ</th></tr>
           <tr><td>移動</td><td>← →</td><td>A D</td><td>◀ ▶</td></tr>
@@ -49,7 +49,7 @@
           <tr><td>ガード</td><td>↓</td><td>S</td><td>▼</td></tr>
           <tr><td>パンチ</td><td>J</td><td>F</td><td>P</td></tr>
           <tr><td>キック</td><td>K</td><td>G</td><td>K</td></tr>
-          <tr><td>リンゴ投げ</td><td>L</td><td>H</td><td>🍎</td></tr>
+          <tr><td>必殺技</td><td>L</td><td>H</td><td>🍎</td></tr>
         </table>
         <p class="small">P / Esc で一時停止</p>
         <div class="buttons"><button data-action="title">もどる</button></div>
@@ -58,7 +58,7 @@
 
     <div id="result" class="overlay hidden">
       <div class="panel">
-        <img id="result-img" src="assets/towa.png" alt="" class="hero bounce">
+        <canvas id="result-img" width="300" height="300" class="hero bounce"></canvas>
         <h2 id="result-text"></h2>
         <div class="buttons">
           <button data-action="again">もう一回</button>
@@ -86,6 +86,7 @@
   <script src="src/input.js"></script>
   <script src="src/fighter.js"></script>
   <script src="src/effects.js"></script>
+  <script src="src/characters.js"></script>
   <script src="src/ai.js"></script>
   <script src="src/main.js"></script>
 </body>
